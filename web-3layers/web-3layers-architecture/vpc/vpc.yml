@@ -1,0 +1,234 @@
+AWSTemplateFormatVersion: '2010-09-09'
+# ------------------------------------------------------------#
+# パラメータ
+# ------------------------------------------------------------# 
+Parameters:
+  UniqueName:
+    Type: String
+    Default: myenv
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+  SubnetAvailabilityZoneA:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: ap-northeast-1a
+  SubnetAvailabilityZoneC:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: ap-northeast-1c
+  PublicSubnetCidrA:
+    Type: String
+    Default: 10.0.1.0/24
+  PublicSubnetCidrC:
+    Type: String
+    Default: 10.0.2.0/24
+  PrivateSubnetCidrA:
+    Type: String
+    Default: 10.0.3.0/24
+  PrivateSubnetCidrA2:
+    Type: String
+    Default: 10.0.4.0/24
+  PrivateSubnetCidrC:
+    Type: String
+    Default: 10.0.5.0/24
+  PrivateSubnetCidrC2:
+    Type: String
+    Default: 10.0.6.0/24
+
+# ------------------------------------------------------------#
+# ラベル #このテンプレートこのまま使用する場合、コメントアウトを外す。
+# ------------------------------------------------------------# 
+# Metadata:
+#   AWS::CloudFormation::Interface:
+#     ParameterGroups:
+#       -
+#         Label:
+#           default: "Common param"
+#         Parameters:
+#           - UniqueName
+#       -
+#         Label:
+#           default: "VPC param"
+#         Parameters:
+#           - VpcCidr
+#           - SubnetAvailabilityZoneA
+#           - SubnetAvailabilityZoneC
+#           - PublicSubnetCidrA
+#           - PublicSubnetCidrC
+#           - PrivateSubnetCidrA
+#           - PrivateSubnetCidrA2
+#           - PrivateSubnetCidrC
+#           - PrivateSubnetCidrC2
+
+Resources:
+# ------------------------------------------------------------#
+# VPC
+# ------------------------------------------------------------# 
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties: 
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-vpc
+# ------------------------------------------------------------#
+# InternetGateway
+# ------------------------------------------------------------# 
+  Igw:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-igw
+  IgwAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref Igw
+      VpcId: !Ref Vpc
+# ------------------------------------------------------------#
+# Subnets(AZ:a)
+# ------------------------------------------------------------# 
+  PublicSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref SubnetAvailabilityZoneA
+      CidrBlock: !Ref PublicSubnetCidrA
+      MapPublicIpOnLaunch: false
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-publicsubnet-a
+
+  PrivateSubnetA:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref SubnetAvailabilityZoneA
+      CidrBlock: !Ref PrivateSubnetCidrA
+      MapPublicIpOnLaunch: false
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-privatesubnet-a
+
+  PrivateSubnetA2:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref SubnetAvailabilityZoneA
+      CidrBlock: !Ref PrivateSubnetCidrA2
+      MapPublicIpOnLaunch: false
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-privatesubnet-a2
+# ------------------------------------------------------------#
+# Subnets(AZ:c)
+# ------------------------------------------------------------# 
+  PublicSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref SubnetAvailabilityZoneC
+      CidrBlock: !Ref PublicSubnetCidrC
+      MapPublicIpOnLaunch: false
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-publicsubnet-c
+
+  PrivateSubnetC:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref SubnetAvailabilityZoneC
+      CidrBlock: !Ref PrivateSubnetCidrC
+      MapPublicIpOnLaunch: false
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-privatesubnet-c
+
+  PrivateSubnetC2:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref SubnetAvailabilityZoneC
+      CidrBlock: !Ref PrivateSubnetCidrC2
+      MapPublicIpOnLaunch: false
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-privatesubnet-c2
+# ------------------------------------------------------------#
+# Routes(Public)
+# ------------------------------------------------------------# 
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref Vpc
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-public-rtb
+
+  PublicRouteTableAssocA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetA
+
+  PublicRouteTableAssocC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetC
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref Igw
+
+Outputs:
+  VpcOutput:
+    Description: vpc id
+    Value: !Ref Vpc
+    Export: 
+      Name: !Sub ${UniqueName}-VpcOutput
+  # ------------------------------------------------------------#
+  # パブリックサブネット出力
+  # ------------------------------------------------------------# 
+  PublicSubnetAOutput:
+    Description: public subnet a
+    Value: !Ref PublicSubnetA
+    Export: 
+      Name: !Sub ${UniqueName}-PublicSubnetA-Output
+
+  PublicSubnetCOutput:
+    Description: public subnet c
+    Value: !Ref PublicSubnetC
+    Export: 
+      Name: !Sub ${UniqueName}-PublicSubnetC-Output
+  # ------------------------------------------------------------#
+  # プライベートサブネット出力
+  # ------------------------------------------------------------# 
+  PrivateSubnetAOutput:
+    Description: private subnet a
+    Value: !Ref PrivateSubnetA
+    Export: 
+      Name: !Sub ${UniqueName}-PrivateSubnetA-Output
+
+  PrivateSubnetCOutput:
+    Description: private subnet c
+    Value: !Ref PrivateSubnetC
+    Export: 
+      Name: !Sub ${UniqueName}-PrivateSubnetC-Output
+
+  PrivateSubnetA2Output:
+    Description: private subnet a2
+    Value: !Ref PrivateSubnetA2
+    Export: 
+      Name: !Sub ${UniqueName}-PrivateSubnetA2-Output
+
+  PrivateSubnetC2Output:
+    Description: private subnet c2
+    Value: !Ref PrivateSubnetC2
+    Export: 
+      Name: !Sub ${UniqueName}-PrivateSubnetC2-Output

@@ -1,0 +1,202 @@
+AWSTemplateFormatVersion: '2010-09-09'
+# ------------------------------------------------------------#
+# パラメータ
+# ------------------------------------------------------------#
+Parameters:
+  UniqueName:
+    Type: String
+    Default: myenv
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+  SubnetAvailabilityZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: ap-northeast-1a
+  PublicSubnetCidr:
+    Type: String
+    Default: 10.0.1.0/24
+  PrivateSubnetCidr:
+    Type: String
+    Default: 10.0.2.0/24
+# ------------------------------------------------------------#
+# リソース
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+# リソース：vpc
+# ------------------------------------------------------------#
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties: 
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-vpc
+
+  # IGW
+  Igw:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-igw
+  IgwAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref Igw
+      VpcId: !Ref Vpc
+# ------------------------------------------------------------#
+# リソース：subnet
+# ------------------------------------------------------------#
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref SubnetAvailabilityZone
+      CidrBlock: !Ref PublicSubnetCidr
+      MapPublicIpOnLaunch: false
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-publicsubnet-a
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref SubnetAvailabilityZone
+      CidrBlock: !Ref PrivateSubnetCidr
+      MapPublicIpOnLaunch: false
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-privatesubnet-a
+
+  # Routing(Public)
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref Vpc
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-public-rtb
+
+  PublicRouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    Properties: 
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref Igw
+
+  # Routing(Private)
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref Vpc
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-private-rtb
+
+  PrivateRouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnet
+
+  PrivateRoute:
+    Type: AWS::EC2::Route
+    Properties: 
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+
+  Eip:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub ${UniqueName}-eip
+# ------------------------------------------------------------#
+# リソース：ssm endpoint
+# ------------------------------------------------------------#
+  # ssm endpoint
+  SsmEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: false
+      SecurityGroupIds:
+        - !Ref SecurtyGroup
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ssm # Required
+      SubnetIds:
+        - !Ref PrivateSubnet
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc # Required
+
+  # ssmmessages endpoint
+  SsmMessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: false
+      SecurityGroupIds:
+        - !Ref SecurtyGroup
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ssmmessages # Required
+      SubnetIds:
+        - !Ref PrivateSubnet
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc # Required
+
+  # ec2messages endpoint
+  Ec2MessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: false
+      SecurityGroupIds:
+        - !Ref SecurtyGroup
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.ec2messages # Required
+      SubnetIds:
+        - !Ref PrivateSubnet
+      VpcEndpointType: Interface
+      VpcId: !Ref Vpc # Required
+# ------------------------------------------------------------#
+# リソース：security group
+# ------------------------------------------------------------#
+  # ssm securtygroup
+  SecurtyGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: vpc sg for ssm # Required
+      GroupName: vpc-sg-ssm
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref PrivateSubnetCidr
+      VpcId: !Ref Vpc
+# ------------------------------------------------------------#
+# リソース：natgateway
+# ------------------------------------------------------------#
+  # NATGateway
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt Eip.AllocationId
+      ConnectivityType: public
+      SubnetId: !Ref PublicSubnet # Required
+      Tags:
+        - Key: Name
+          Value: !Sub ${UniqueName}-natgateway
+# ------------------------------------------------------------#
+# 出力
+# ------------------------------------------------------------#
+Outputs:
+  PrivateSubnetOutput:
+    Value: !Ref PrivateSubnet
+    Export: 
+      Name: !Sub ${UniqueName}-PrivateSubnet-Output

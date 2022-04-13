@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  this is route stack input other child-stack URL and Parameters
+
+# ------------------------------------------------------------#
+# ラベル
+# ------------------------------------------------------------# 
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "The bucket stored stack"
+        Parameters:
+          - StoredStackS3BucketName
+      -
+        Label:
+          default: "Common param"
+        Parameters:
+          - UniqueName
+      -
+        Label:
+          default: "VPC param"
+        Parameters:
+          - VpcCidr
+          - SubnetAvailabilityZoneA
+          - SubnetAvailabilityZoneC
+          - PublicSubnetCidrA
+          - PublicSubnetCidrC
+          - PrivateSubnetCidrA
+          - PrivateSubnetCidrC
+          - PrivateSubnetCidrA2
+          - PrivateSubnetCidrC2
+          
+# ------------------------------------------------------------#
+# パラメータ：共通
+# ------------------------------------------------------------# 
+Parameters: 
+  StoredStackS3BucketName:
+    Type: String
+  UniqueName:
+    Type: String
+    Default: myenv
+# ------------------------------------------------------------#
+# パラメータ：VPC
+# ------------------------------------------------------------# 
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+  SubnetAvailabilityZoneA:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: ap-northeast-1a
+  SubnetAvailabilityZoneC:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: ap-northeast-1c
+  PublicSubnetCidrA:
+    Type: String
+    Default: 10.0.1.0/24
+  PublicSubnetCidrC:
+    Type: String
+    Default: 10.0.2.0/24
+  PrivateSubnetCidrA:
+    Type: String
+    Default: 10.0.3.0/24
+  PrivateSubnetCidrC:
+    Type: String
+    Default: 10.0.4.0/24
+  PrivateSubnetCidrA2:
+    Type: String
+    Default: 10.0.5.0/24
+  PrivateSubnetCidrC2:
+    Type: String
+    Default: 10.0.6.0/24
+# ------------------------------------------------------------#
+# リソース
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+# リソース：VPC
+# ------------------------------------------------------------#
+  VPC:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${StoredStackS3BucketName}.s3.${AWS::Region}.amazonaws.com/${AWS::Region}/web-3layers-architecture/vpc/vpc.yml
+      Parameters:
+        UniqueName: !Ref UniqueName
+        VpcCidr: !Ref VpcCidr
+        SubnetAvailabilityZoneA: !Ref SubnetAvailabilityZoneA
+        SubnetAvailabilityZoneC: !Ref SubnetAvailabilityZoneC
+        PublicSubnetCidrA: !Ref PublicSubnetCidrA
+        PrivateSubnetCidrA: !Ref PrivateSubnetCidrA
+        PublicSubnetCidrC: !Ref PublicSubnetCidrC
+        PrivateSubnetCidrC: !Ref PrivateSubnetCidrC
+        PrivateSubnetCidrA2: !Ref PrivateSubnetCidrA2
+        PrivateSubnetCidrC2: !Ref PrivateSubnetCidrC2
+

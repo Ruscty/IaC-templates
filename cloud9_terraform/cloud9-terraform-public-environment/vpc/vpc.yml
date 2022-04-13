@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+# ------------------------------------------------------------#
+# パラメータ
+# ------------------------------------------------------------#
+Parameters:
+  UniqueName:
+    Type: String
+    Default: myenv
+  VpcCidr:
+    Type: String
+    Default: 10.0.0.0/16
+  PublicSubnetAvailabilityZone:
+    Type: AWS::EC2::AvailabilityZone::Name
+    Default: ap-northeast-1a
+  PublicSubnetCidr:
+    Type: String
+    Default: 10.0.1.0/24
+# ------------------------------------------------------------#
+# リソース
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+# リソース：VPC
+# ------------------------------------------------------------#
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties: 
+      CidrBlock: !Ref VpcCidr
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-vpc
+
+  # IGW
+  Igw:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-igw
+  IgwAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties: 
+      InternetGatewayId: !Ref Igw
+      VpcId: !Ref Vpc
+# ------------------------------------------------------------#
+# リソース：サブネット
+# ------------------------------------------------------------#
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties: 
+      VpcId: !Ref Vpc
+      AvailabilityZone: !Ref PublicSubnetAvailabilityZone
+      CidrBlock: !Ref PublicSubnetCidr
+      MapPublicIpOnLaunch: false
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-public-subnet
+
+  # Routing
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      VpcId: !Ref Vpc
+      Tags: 
+        - Key: Name
+          Value: !Sub ${UniqueName}-cloud9-public-rtb
+  RouteTableAssocA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref PublicSubnet
+  Route:
+    Type: AWS::EC2::Route
+    Properties: 
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref Igw
+
+# ------------------------------------------------------------#
+# 出力
+# ------------------------------------------------------------#
+Outputs:
+  PublicSubnetOutput:
+    Value: !Ref PublicSubnet
+    Export: 
+      Name: !Sub ${UniqueName}-PublicSubnet-Output
