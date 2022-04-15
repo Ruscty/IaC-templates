@@ -1,0 +1,43 @@
+AWSTemplateFormatVersion: '2010-09-09'
+# ------------------------------------------------------------#
+# パラメータ
+# ------------------------------------------------------------#
+Parameters:
+  UniqueName:
+    Type: String
+    Default: myenv
+# ------------------------------------------------------------#
+# リソース
+# ------------------------------------------------------------#
+Resources:
+# ------------------------------------------------------------#
+# リソース：iam role
+# ------------------------------------------------------------#
+  Cloud9IamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+            -
+                Effect: Allow
+                Action:
+                    - 'sts:AssumeRole'
+                Principal:
+                    Service:
+                        - ec2.amazonaws.com
+                        - cloud9.amazonaws.com
+
+      Description: "cloud9 iam role"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AdministratorAccess
+      MaxSessionDuration: 3600
+      RoleName: !Sub ${UniqueName}-cloud9-role
+
+  Cloud9InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: !Sub ${UniqueName}-cloud9-instance-profile
+      Path: /
+      Roles: # Required
+        - !Ref Cloud9IamRole
