@@ -22,7 +22,7 @@ Parameters:
     Type: String
   BranchName:
     Type: String
-    Default: master
+    Default: main
   ArtifactBucketName:
     Description: Production Account S3 Bucket Name for Artifact
     Type: String

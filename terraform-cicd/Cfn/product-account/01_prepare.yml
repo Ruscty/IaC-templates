@@ -81,21 +81,21 @@ Resources:
               #     - codedeploy:RegisterApplicationRevision
               #   Resource:
               #     - '*'
-              # - Effect: Allow #ElasticBeanstalk関連
-              #   Action:
-              #     - elasticbeanstalk:*
-              #     - ec2:*
-              #     - elasticloadbalancing:*
-              #     - autoscaling:*
-              #     - cloudwatch:*
-              #     - s3:*
-              #     - sns:*
-              #     - cloudformation:*
-              #     - rds:*
-              #     - sqs:*
-              #     - ecs:*
-              #   Resource:
-              #     - '*'
+              - Effect: Allow #ElasticBeanstalk関連
+                Action:
+                  # - elasticbeanstalk:*
+                  # - ec2:*
+                  # - elasticloadbalancing:*
+                  # - autoscaling:*
+                  - cloudwatch:*
+                  - s3:*
+                  # - sns:*
+                  # - cloudformation:*
+                  # - rds:*
+                  # - sqs:*
+                  # - ecs:*
+                Resource:
+                  - '*'
               # - Effect: Allow #lambda関連
               #   Action:
               #     - lambda:InvokeFunction
