@@ -89,7 +89,7 @@ Resources:
                   # - autoscaling:*
                   - cloudwatch:*
                   - s3:*
-                  # - sns:*
+                  - sns:*
                   # - cloudformation:*
                   # - rds:*
                   # - sqs:*
