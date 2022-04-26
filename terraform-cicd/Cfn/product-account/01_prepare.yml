@@ -122,16 +122,11 @@ Resources:
                   - codebuild:StartBuild
                 Resource:
                   - '*'
-              - Effect: Allow
-                Action:
-                  - cloudformation:ValidateTemplate
-                Resource:
-                  - '*'
-              - Effect: Allow
-                Action:
-                  - ecr:DescribeImages
-                Resource:
-                  - '*'
+              # - Effect: Allow
+              #   Action:
+              #     - ecr:DescribeImages
+              #   Resource:
+              #     - '*'
   BuildRole:
     Type: AWS::IAM::Role
     Properties:
