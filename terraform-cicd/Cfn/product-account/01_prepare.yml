@@ -46,6 +46,9 @@ Resources:
             Action:
               - sts:AssumeRole
       Path: /
+      # パイプラインのポリシーについては下記参照
+      # https://docs.aws.amazon.com/ja_jp/codepipeline/latest/userguide/security-iam.html#how-to-custom-role
+      # 都度必要なもの、不要なものを選択してください。
       Policies:
         - PolicyName: Pipeline
           PolicyDocument:
@@ -56,53 +59,63 @@ Resources:
                   - sts:AssumeRole
                 Resource:
                   - !Sub arn:aws:iam::${RepositoryAccountId}:role/* # Cross Account Access
-              - Effect: Allow
-                Action:
-                  - iam:PassRole
-                Resource:
-                  - '*'
-                Condition:
-                  StringEqualsIfExists:
-                    iam:PassedToService:
-                      - cloudformation.amazonaws.com
-                      - elasticbeanstalk.amazonaws.com
-                      - ec2.amazonaws.com
-                      - ecs-tasks.amazonaws.com
-              - Effect: Allow
-                Action:
-                  - elasticbeanstalk:*
-                  - ec2:*
-                  - elasticloadbalancing:*
-                  - autoscaling:*
-                  - cloudwatch:*
-                  - s3:*
-                  - sns:*
-                  - cloudformation:*
-                  - rds:*
-                  - sqs:*
-                  - ecs:*
-                Resource:
-                  - '*'
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                  - lambda:ListFunctions
-                Resource:
-                  - '*'
-              - Effect: Allow
-                Action:
-                  - cloudformation:CreateStack
-                  - cloudformation:DeleteStack
-                  - cloudformation:DescribeStacks
-                  - cloudformation:UpdateStack
-                  - cloudformation:CreateChangeSet
-                  - cloudformation:DeleteChangeSet
-                  - cloudformation:DescribeChangeSet
-                  - cloudformation:ExecuteChangeSet
-                  - cloudformation:SetStackPolicy
-                  - cloudformation:ValidateTemplate
-                Resource:
-                  - '*'
+              # - Effect: Allow #ECSタスク関連
+              #   Action:
+              #     - iam:PassRole
+              #   Resource:
+              #     - '*'
+              #   Condition:
+              #     StringEqualsIfExists:
+              #       iam:PassedToService:
+              #         - cloudformation.amazonaws.com
+              #         - elasticbeanstalk.amazonaws.com
+              #         - ec2.amazonaws.com
+              #         - ecs-tasks.amazonaws.com
+              # - Effect: Allow #CodeDeploy関連
+              #   Action:
+              #     - codedeploy:CreateDeployment
+              #     - codedeploy:GetApplication
+              #     - codedeploy:GetApplicationRevision
+              #     - codedeploy:GetDeployment
+              #     - codedeploy:GetDeploymentConfig
+              #     - codedeploy:RegisterApplicationRevision
+              #   Resource:
+              #     - '*'
+              # - Effect: Allow #ElasticBeanstalk関連
+              #   Action:
+              #     - elasticbeanstalk:*
+              #     - ec2:*
+              #     - elasticloadbalancing:*
+              #     - autoscaling:*
+              #     - cloudwatch:*
+              #     - s3:*
+              #     - sns:*
+              #     - cloudformation:*
+              #     - rds:*
+              #     - sqs:*
+              #     - ecs:*
+              #   Resource:
+              #     - '*'
+              # - Effect: Allow #lambda関連
+              #   Action:
+              #     - lambda:InvokeFunction
+              #     - lambda:ListFunctions
+              #   Resource:
+              #     - '*'
+              # - Effect: Allow #CloudFormationのスタックセット関連
+              #   Action:
+              #     - cloudformation:CreateStack
+              #     - cloudformation:DeleteStack
+              #     - cloudformation:DescribeStacks
+              #     - cloudformation:UpdateStack
+              #     - cloudformation:CreateChangeSet
+              #     - cloudformation:DeleteChangeSet
+              #     - cloudformation:DescribeChangeSet
+              #     - cloudformation:ExecuteChangeSet
+              #     - cloudformation:SetStackPolicy
+              #     - cloudformation:ValidateTemplate
+              #   Resource:
+              #     - '*'
               - Effect: Allow
                 Action:
                   - codebuild:BatchGetBuilds
