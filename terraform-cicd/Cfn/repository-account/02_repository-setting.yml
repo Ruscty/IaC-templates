@@ -14,16 +14,16 @@ Parameters:
     MinLength: 12
     Type: String
   S3BucketArn:
-    Description: Production Account S3 Bucket ARN for Artifact (Created by 01-requirement.yml)
+    Description: Production Account S3 Bucket ARN for Artifact
     Type: String
   CmkArn:
-    Description: Production Account CMK ARN (Created by 01-requirement.yml)
+    Description: Production Account CMK ARN
     Type: String
   CodeCommitRepositoryArn:
     Description: CodeCommit Repository Arn
     Type: String
   CodeCommitRepositoryName:
-    Description: Repository Account CodeCommit Repository Name (Created by 02-codecommit.yml)
+    Description: Repository Account CodeCommit Repository Name
     Type: String
   BranchName:
     Type: String

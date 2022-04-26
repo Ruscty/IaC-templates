@@ -12,5 +12,6 @@
 
 # 手動対応
 1. KMSキーポリシー(使用権限)にCodeBuildロールを追加する。
+   「01_prepare.yml」実行後にKMSキーポリシーにrepositoryアカウントのArnとBuildRoleのArnを追加する。
 2. BuildロールにTerraformで作成するリソースの権限を与えること。
    (Cfn(01_prepare.yml)実行前にIAMポリシーを書き換えでも良い)
