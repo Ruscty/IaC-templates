@@ -139,6 +139,7 @@ Resources:
               Service: codebuild.amazonaws.com
             Action: sts:AssumeRole
       Policies:
+        # 最低限必要な権限(logs:ログ出力、s3:アーティファクト格納、codebuild:実行結果出力など)
         - PolicyName: BuildPolicy
           PolicyDocument:
             Version: 2012-10-17
@@ -166,6 +167,16 @@ Resources:
                   - codebuild:BatchPutTestCases
                   - codebuild:BatchPutCodeCoverages
                 Resource: '*'
+        # Terraformで作成するリソースの権限を付与する。
+        # 今回はS3バケットの作成のためS3のフルアクセスを付与
+        - PolicyName: TerraformPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource: '*'
+                Action:
+                  - s3:*
 # ------------------------------------------------------------#
 # リソース：S3バケット
 # ------------------------------------------------------------#
