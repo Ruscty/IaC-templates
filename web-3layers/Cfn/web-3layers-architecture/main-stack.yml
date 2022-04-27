@@ -99,7 +99,7 @@ Resources:
   VPC:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://${StoredStackS3BucketName}.s3.${AWS::Region}.amazonaws.com/${AWS::Region}/web-3layers-architecture/vpc/vpc.yml
+      TemplateURL: !Sub https://${StoredStackS3BucketName}.s3.${AWS::Region}.amazonaws.com/web-3layers-architecture/vpc/vpc.yml
       Parameters:
         Prefix: !Ref Prefix
         VpcCidr: !Ref VpcCidr
@@ -117,7 +117,7 @@ Resources:
   Aurora:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: !Sub https://${StoredStackS3BucketName}.s3.${AWS::Region}.amazonaws.com/${AWS::Region}/web-3layers-architecture/aurora/aurora.yml
+      TemplateURL: !Sub https://${StoredStackS3BucketName}.s3.${AWS::Region}.amazonaws.com/web-3layers-architecture/aurora/aurora.yml
       Parameters:
         Prefix: !Ref Prefix
         Vpc: 
