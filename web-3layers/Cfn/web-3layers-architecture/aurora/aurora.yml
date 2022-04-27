@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: 2010-09-09
+# ------------------------------------------------------------#
+# パラメータ
+# ------------------------------------------------------------#
+Parameters:
+# ------------------------------------------------------------#
+# パラメータ：共通
+# ------------------------------------------------------------#
+  Prefix:
+    Type: String
+  Vpc:
+    Type: String
+  DbSubnet1a:
+    Type: String
+  DbSubnet1c:
+    Type: String
+# ------------------------------------------------------------#
+# パラメータ：データベース設定
+# ------------------------------------------------------------#
+  EngineVersion:
+    Type: String
+  InstanceClass:
+    Type: String
+  DBMasterUserName:
+    Type: String
+  DBMasterUserPassword:
+    Type: String
+    NoEcho: true
+  KmsKeyArn:
+    Type: String
+# ------------------------------------------------------------#
+# リソース
+# ------------------------------------------------------------# 
+Resources:
+# ------------------------------------------------------------#
+# リソース：データベース
+# ------------------------------------------------------------# 
+  # サブネットグループ
+  DbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: DBSubnetGroup for Aurora  # Required
+      DBSubnetGroupName: !Sub ${Prefix}-db-subnet-group
+      SubnetIds: # Required
+        - !Ref DbSubnet1a 
+        - !Ref DbSubnet1c
+
+  # パラメータグループ
+  DBClusterParameterGroup:
+    Type: AWS::RDS::DBClusterParameterGroup
+    Properties:
+      Description: aurora
+      Family: aurora-postgresql13
+      Parameters:
+        time_zone: Asia/Tokyo
+
+  ## DB用セキュリティグループの生成
+  SgDb:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security Group of database
+      GroupName: database
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow all outbound traffic by default
+          IpProtocol: "-1"
+      Tags:
+        - Key: Name
+          Value: !Sub ${Prefix}-sg-db
+      VpcId:
+        Ref: Vpc
+
+
+  # DBクラスター
+  DBCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      DBClusterIdentifier: aurora-cluster
+      DBClusterParameterGroupName: !Ref DBClusterParameterGroup
+      DBSubnetGroupName: !Ref DbSubnetGroup
+      DatabaseName: test_aurora
+      Engine: aurora-postgresql
+      EngineVersion: !Ref EngineVersion
+      StorageEncrypted: true
+      KmsKeyId: !Ref KmsKeyArn
+      MasterUserPassword: !Ref DBMasterUserPassword
+      MasterUsername: !Ref DBMasterUserName
+      VpcSecurityGroupIds:
+        - !GetAtt SgDb.GroupId
+      EnableCloudwatchLogsExports:
+        - audit
+        - error
+        - slowquery
+      PreferredMaintenanceWindow: Sat:17:00-Sat:17:30
+
+  # DBインスタンス
+  DBInstanceA:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DBCluster
+      DBInstanceClass: !Ref InstanceClass
+      Engine: aurora-postgresql
+      AutoMinorVersionUpgrade: true
+      MonitoringInterval: 60
+      MonitoringRoleArn: !Ref RdsMonitoringRole
+
+  DBInstanceB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DBCluster
+      DBInstanceClass: !Ref InstanceClass
+      Engine: aurora-postgresql
+      AutoMinorVersionUpgrade: true
+      MonitoringInterval: 60
+      MonitoringRoleArn: !Ref RdsMonitoringRole
+
+# ------------------------------------------------------------#
+# リソース：iam role(RDS:拡張モニタリング)
+# ------------------------------------------------------------#
+  RdsMonitoringRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - monitoring.rds.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole

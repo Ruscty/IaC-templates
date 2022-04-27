@@ -17,7 +17,7 @@ Metadata:
         Label:
           default: "Common param"
         Parameters:
-          - UniqueName
+          - Prefix
       -
         Label:
           default: "VPC param"
@@ -38,7 +38,7 @@ Metadata:
 Parameters: 
   StoredStackS3BucketName:
     Type: String
-  UniqueName:
+  Prefix:
     Type: String
     Default: myenv
 # ------------------------------------------------------------#
@@ -72,6 +72,24 @@ Parameters:
     Type: String
     Default: 10.0.6.0/24
 # ------------------------------------------------------------#
+# パラメータ：データベース
+# ------------------------------------------------------------#
+  EngineVersion:
+    Type: String
+    Default: 13.4
+  InstanceClass:
+    Type: String
+    Default: db.r6g.large
+  DBMasterUserName:
+    Type: String
+    Default: Admin
+  DBMasterUserPassword:
+    Type: String
+    NoEcho: true
+  KmsKeyArn:
+    Type: String
+
+# ------------------------------------------------------------#
 # リソース
 # ------------------------------------------------------------#
 Resources:
@@ -83,7 +101,7 @@ Resources:
     Properties:
       TemplateURL: !Sub https://${StoredStackS3BucketName}.s3.${AWS::Region}.amazonaws.com/${AWS::Region}/web-3layers-architecture/vpc/vpc.yml
       Parameters:
-        UniqueName: !Ref UniqueName
+        Prefix: !Ref Prefix
         VpcCidr: !Ref VpcCidr
         SubnetAvailabilityZoneA: !Ref SubnetAvailabilityZoneA
         SubnetAvailabilityZoneC: !Ref SubnetAvailabilityZoneC
@@ -93,4 +111,30 @@ Resources:
         PrivateSubnetCidrC: !Ref PrivateSubnetCidrC
         PrivateSubnetCidrA2: !Ref PrivateSubnetCidrA2
         PrivateSubnetCidrC2: !Ref PrivateSubnetCidrC2
+# ------------------------------------------------------------#
+# リソース：データベース(Aurora)
+# ------------------------------------------------------------#
+  Aurora:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${StoredStackS3BucketName}.s3.${AWS::Region}.amazonaws.com/${AWS::Region}/web-3layers-architecture/aurora/aurora.yml
+      Parameters:
+        Prefix: !Ref Prefix
+        Vpc: 
+          Fn::GetAtt:
+            - VPC
+            - Outputs.VpcOutput
+        DbSubnet1a: 
+          Fn::GetAtt:
+            - VPC
+            - Outputs.PrivateSubnetA2Output
+        DbSubnet1c: 
+          Fn::GetAtt:
+            - VPC
+            - Outputs.PrivateSubnetC2Output
+        EngineVersion: !Ref EngineVersion
+        InstanceClass: !Ref InstanceClass
+        DBMasterUserName: !Ref DBMasterUserName
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        KmsKeyArn: !Ref KmsKeyArn
 
