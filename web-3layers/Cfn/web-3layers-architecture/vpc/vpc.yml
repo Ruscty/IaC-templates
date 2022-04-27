@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: '2010-09-09'
 # パラメータ
 # ------------------------------------------------------------# 
 Parameters:
-  UniqueName:
+  Prefix:
     Type: String
     Default: myenv
   VpcCidr:
@@ -35,29 +35,29 @@ Parameters:
     Default: 10.0.6.0/24
 
 # ------------------------------------------------------------#
-# ラベル #このテンプレートこのまま使用する場合、コメントアウトを外す。
+# ラベル
 # ------------------------------------------------------------# 
-# Metadata:
-#   AWS::CloudFormation::Interface:
-#     ParameterGroups:
-#       -
-#         Label:
-#           default: "Common param"
-#         Parameters:
-#           - UniqueName
-#       -
-#         Label:
-#           default: "VPC param"
-#         Parameters:
-#           - VpcCidr
-#           - SubnetAvailabilityZoneA
-#           - SubnetAvailabilityZoneC
-#           - PublicSubnetCidrA
-#           - PublicSubnetCidrC
-#           - PrivateSubnetCidrA
-#           - PrivateSubnetCidrA2
-#           - PrivateSubnetCidrC
-#           - PrivateSubnetCidrC2
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Common param"
+        Parameters:
+          - Prefix
+      -
+        Label:
+          default: "VPC param"
+        Parameters:
+          - VpcCidr
+          - SubnetAvailabilityZoneA
+          - SubnetAvailabilityZoneC
+          - PublicSubnetCidrA
+          - PublicSubnetCidrC
+          - PrivateSubnetCidrA
+          - PrivateSubnetCidrA2
+          - PrivateSubnetCidrC
+          - PrivateSubnetCidrC2
 
 Resources:
 # ------------------------------------------------------------#
@@ -71,7 +71,7 @@ Resources:
       EnableDnsSupport: true
       Tags: 
         - Key: Name
-          Value: !Sub ${UniqueName}-cloud9-vpc
+          Value: !Sub ${Prefix}-cloud9-vpc
 # ------------------------------------------------------------#
 # InternetGateway
 # ------------------------------------------------------------# 
@@ -80,7 +80,7 @@ Resources:
     Properties:
       Tags: 
         - Key: Name
-          Value: !Sub ${UniqueName}-cloud9-igw
+          Value: !Sub ${Prefix}-cloud9-igw
   IgwAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties: 
@@ -98,7 +98,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags: 
         - Key: Name
-          Value: !Sub ${UniqueName}-cloud9-publicsubnet-a
+          Value: !Sub ${Prefix}-cloud9-publicsubnet-a
 
   PrivateSubnetA:
     Type: AWS::EC2::Subnet
@@ -109,7 +109,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags: 
         - Key: Name
-          Value: !Sub ${UniqueName}-cloud9-privatesubnet-a
+          Value: !Sub ${Prefix}-cloud9-privatesubnet-a
 
   PrivateSubnetA2:
     Type: AWS::EC2::Subnet
@@ -120,7 +120,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags: 
         - Key: Name
-          Value: !Sub ${UniqueName}-cloud9-privatesubnet-a2
+          Value: !Sub ${Prefix}-cloud9-privatesubnet-a2
 # ------------------------------------------------------------#
 # Subnets(AZ:c)
 # ------------------------------------------------------------# 
@@ -133,7 +133,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags: 
         - Key: Name
-          Value: !Sub ${UniqueName}-cloud9-publicsubnet-c
+          Value: !Sub ${Prefix}-cloud9-publicsubnet-c
 
   PrivateSubnetC:
     Type: AWS::EC2::Subnet
@@ -144,7 +144,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags: 
         - Key: Name
-          Value: !Sub ${UniqueName}-cloud9-privatesubnet-c
+          Value: !Sub ${Prefix}-cloud9-privatesubnet-c
 
   PrivateSubnetC2:
     Type: AWS::EC2::Subnet
@@ -155,7 +155,7 @@ Resources:
       MapPublicIpOnLaunch: false
       Tags: 
         - Key: Name
-          Value: !Sub ${UniqueName}-cloud9-privatesubnet-c2
+          Value: !Sub ${Prefix}-cloud9-privatesubnet-c2
 # ------------------------------------------------------------#
 # Routes(Public)
 # ------------------------------------------------------------# 
@@ -165,7 +165,7 @@ Resources:
       VpcId: !Ref Vpc
       Tags: 
         - Key: Name
-          Value: !Sub ${UniqueName}-cloud9-public-rtb
+          Value: !Sub ${Prefix}-cloud9-public-rtb
 
   PublicRouteTableAssocA:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -191,7 +191,7 @@ Outputs:
     Description: vpc id
     Value: !Ref Vpc
     Export: 
-      Name: !Sub ${UniqueName}-VpcOutput
+      Name: !Sub ${Prefix}-VpcOutput
   # ------------------------------------------------------------#
   # パブリックサブネット出力
   # ------------------------------------------------------------# 
@@ -199,13 +199,13 @@ Outputs:
     Description: public subnet a
     Value: !Ref PublicSubnetA
     Export: 
-      Name: !Sub ${UniqueName}-PublicSubnetA-Output
+      Name: !Sub ${Prefix}-PublicSubnetA-Output
 
   PublicSubnetCOutput:
     Description: public subnet c
     Value: !Ref PublicSubnetC
     Export: 
-      Name: !Sub ${UniqueName}-PublicSubnetC-Output
+      Name: !Sub ${Prefix}-PublicSubnetC-Output
   # ------------------------------------------------------------#
   # プライベートサブネット出力
   # ------------------------------------------------------------# 
@@ -213,22 +213,22 @@ Outputs:
     Description: private subnet a
     Value: !Ref PrivateSubnetA
     Export: 
-      Name: !Sub ${UniqueName}-PrivateSubnetA-Output
+      Name: !Sub ${Prefix}-PrivateSubnetA-Output
 
   PrivateSubnetCOutput:
     Description: private subnet c
     Value: !Ref PrivateSubnetC
     Export: 
-      Name: !Sub ${UniqueName}-PrivateSubnetC-Output
+      Name: !Sub ${Prefix}-PrivateSubnetC-Output
 
   PrivateSubnetA2Output:
     Description: private subnet a2
     Value: !Ref PrivateSubnetA2
     Export: 
-      Name: !Sub ${UniqueName}-PrivateSubnetA2-Output
+      Name: !Sub ${Prefix}-PrivateSubnetA2-Output
 
   PrivateSubnetC2Output:
     Description: private subnet c2
     Value: !Ref PrivateSubnetC2
     Export: 
-      Name: !Sub ${UniqueName}-PrivateSubnetC2-Output
+      Name: !Sub ${Prefix}-PrivateSubnetC2-Output
