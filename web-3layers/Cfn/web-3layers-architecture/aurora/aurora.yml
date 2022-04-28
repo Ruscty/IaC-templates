@@ -52,7 +52,7 @@ Resources:
       Description: aurora
       Family: aurora-postgresql13
       Parameters:
-        time_zone: Asia/Tokyo
+        client_encoding: UTF8
 
   ## DB用セキュリティグループの生成
   SgDb:
@@ -87,10 +87,6 @@ Resources:
       MasterUsername: !Ref DBMasterUserName
       VpcSecurityGroupIds:
         - !GetAtt SgDb.GroupId
-      EnableCloudwatchLogsExports:
-        - audit
-        - error
-        - slowquery
       PreferredMaintenanceWindow: Sat:17:00-Sat:17:30
 
   # DBインスタンス
@@ -101,8 +97,6 @@ Resources:
       DBInstanceClass: !Ref InstanceClass
       Engine: aurora-postgresql
       AutoMinorVersionUpgrade: true
-      MonitoringInterval: 60
-      MonitoringRoleArn: !Ref RdsMonitoringRole
 
   DBInstanceB:
     Type: AWS::RDS::DBInstance
@@ -111,23 +105,3 @@ Resources:
       DBInstanceClass: !Ref InstanceClass
       Engine: aurora-postgresql
       AutoMinorVersionUpgrade: true
-      MonitoringInterval: 60
-      MonitoringRoleArn: !Ref RdsMonitoringRole
-
-# ------------------------------------------------------------#
-# リソース：iam role(RDS:拡張モニタリング)
-# ------------------------------------------------------------#
-  RdsMonitoringRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - monitoring.rds.amazonaws.com
-            Action:
-              - sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole

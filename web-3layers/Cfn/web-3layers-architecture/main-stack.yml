@@ -82,7 +82,7 @@ Parameters:
     Default: db.r6g.large
   DBMasterUserName:
     Type: String
-    Default: Admin
+    Default: dbuser
   DBMasterUserPassword:
     Type: String
     NoEcho: true
